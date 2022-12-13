@@ -1,0 +1,59 @@
+#!/bin/bash
+
+IPADDR=$1
+
+RED='\033[31m' 
+GRN='\033[32m'
+INF='\033[36m'
+NC='\033[0m'
+
+
+script_name="add_threat_ip"
+
+if [ $# -eq 1 ]
+then
+        echo -e "$script_name: ${INF}INFO${NC}: Validating IP address."
+else
+        echo "$script_name: usage: sudo $script_name \"1.1.1.1\""
+        exit 1
+fi
+
+
+#Clean the input of all spaces
+IPADDR=`echo $IPADDR | tr -d [:space:]`
+
+#Check if the input supplied is an IP
+if echo $IPADDR | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' > /dev/null 2>&1
+then
+
+        echo -e "$script_name: ${INF}INFO${NC}: Checking if $IPADDR is already in the block list."
+        if /usr/sbin/get_threat_ip "$IPADDR" > /dev/null 2>&1
+        then
+                echo -e "$script_name: ${INF}INFO${NC}: $IPADDR is already in the block list."
+                exit 0
+        fi
+        echo -e "$script_name: ${INF}INFO${NC}: $IPADDR not found in the block list."
+
+        echo -e "$script_name: ${INF}INFO${NC}: Checking if $IPADDR is in safe list."
+        if grep "^$IPADDR$" /path/to/safeiplist.txt > /dev/null 2>&1
+        then
+                echo -e "$script_name: ${INF}INFO${NC}: $IPADDR is in safe list and won't be blocked".
+                exit 0
+        fi
+        echo -e "$script_name: ${INF}INFO${NC}: $IPADDR not found in the block list."
+
+        echo -e "$script_name: ${INF}INFO${NC}: Blocking $IPADDR"
+        if echo $IPADDR >>  /path/to/badip.txt
+        then
+                echo -e "$script_name: ${GRN}SUCCESS${NC}: $IPADDR blocked successfully."
+                exit 0
+        else
+                echo -e "$script_name: ${RED}FAILED${NC}: Could not block $IPADDR"
+                exit 1
+        fi
+else
+        echo -e "$script_name: ${RED}ERROR${NC}: $IPADDR is not a valid IP address."
+        echo
+        echo "$script_name: usage: $script_name \"1.1.1.1\""
+        exit 1
+fi
