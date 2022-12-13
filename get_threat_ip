@@ -1,0 +1,40 @@
+#!/bin/sh
+
+IPADDR=$1
+
+RED='\033[31m' 
+GRN='\033[32m'
+INF='\033[36m'
+NC='\033[0m'
+
+script_name="get_threat_ip"
+
+if [ $# -eq 1 ]
+then
+        echo "$script_name: ${INF}INFO${NC}: Validating IP address."
+else
+        echo "$script_name: usage: sudo $script_name \"1.1.1.1\""
+        exit 1
+fi
+
+
+#Clean the input of all spaces
+IPADDR=`echo $IPADDR | tr -d [:space:]`
+
+#Check if the input supplied is an IP
+if echo $IPADDR | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' > /dev/null 2>&1
+then
+        if grep "^$IPADDR$" /path/to/badip.txt > /dev/null 2>&1
+        then
+                echo "$script_name: ${INF}INFO${NC}: $IPADDR exists in the block list and has been blocked successfully."
+                exit 0
+        else
+                echo "$script_name: ${INF}INFO${NC}: Could not find $IPADDR in the block list."
+                exit 1
+        fi
+else
+        echo "$script_name: ${RED}ERROR${NC}: $IPADDR is not a valid IP address"
+        echo "$script_name: usage: $script_name \"1.1.1.1\""
+        exit 1
+fi
+exit 1
