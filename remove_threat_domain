@@ -1,0 +1,46 @@
+#!/bin/bash
+
+domain=$1
+
+RED='\033[31m' 
+GRN='\033[32m'
+INF='\033[36m'
+NC='\033[0m'
+
+script_name="remove_threat_domain"
+
+if [ $# -eq 1 ]
+then
+        echo -e "$script_name: ${INF}INFO${NC}: Validating domain name."
+else
+        echo "$script_name: usage: sudo $script_name \"example.com\""
+        echo "$script_name: usage: sudo $script_name \"label.example.com\""
+        exit 1
+fi
+
+# Validate domain name
+domain_regex="^([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]\.)+[a-zA-Z]{2,}$"
+
+if [[ "$domain" =~ $domain_regex ]]; then
+        if grep "^$domain$" /path/to/baddomain.txt > /dev/null 2>&1
+        then
+                if sed -i "/^$domain$/d" /var/www/html/threat/baddomain.txt
+                then
+                        echo -e "$script_name: ${GRN}SUCCESS${NC}: $domain has been removed from the block list"
+                        exit 0
+                else
+                        echo -e "$script_name: ${RED}FAILED${NC}: $domain was found in the block list but remove action did not succeed"
+                        exit 1
+                fi
+
+        else
+                echo -e "$script_name: ${INF}INFO${NC}: Could not find $domain in the block list"
+                exit 1
+        fi
+else
+        echo -e "$script_name: ${RED}ERROR${NC}: $domain is not a valid domain name"
+        echo
+        echo "$script_name: usage: sudo $script_name \"example.com\""
+        echo "$script_name: usage: sudo $script_name \"label.example.com\""
+        exit 1
+fi
